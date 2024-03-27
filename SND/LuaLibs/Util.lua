@@ -7,6 +7,22 @@ require "Util"
 
 local f = string.format
 
+local _require = require
+_G.require = function(moduleName)
+	local value = _require(moduleName)
+	if type(value) == "table" then
+		local metatable = getmetatable(value)
+		if not metatable then
+			setmetatable(value, {
+				__index = function(self, i)
+					error(f("\nAttempt to index %s[\"%s\"], a nil value.", tostring(moduleName), tostring(i)))
+				end
+			})
+		end
+	end
+	return value
+end
+
 local Condition = require "Condition"
 
 local function wait(seconds)
@@ -55,7 +71,6 @@ local function ArgCheck(...)
 		local callerInfo = debug.getinfo(2)
 		local callerName = callerInfo and callerInfo.name or "[none]"
 		local traceback = debug.traceback(nil, 2):gsub("\n[^\n]*$", ""):gsub("^[^\n]*\n", "")
-
 		error(f("\nWrong arg type when calling \"%s(%s)\"\n%sexpected \"%s(%s)\"\n%s", callerName, table.concat(argTypes, ", "), string.rep(" ", 36), callerName, table.concat(expectedTypes, ", "), traceback), 2)
 	end
 end
@@ -224,7 +239,7 @@ end
 function MoveTo(position, usePathfinding, useVolume)
 	ArgCheck({position, "table"})
 	local x, y, z = table.unpack(position)
-	assert(x ~= nil and y ~= nil and z ~= nil, f("MoveTo position vector is invalid. (%s, %s, %s)", x, y, z))
+	assert(x ~= nil and y ~= nil and z ~= nil, f("MoveTo position vector is invalid. (%s, %s, %s)", tostring(x), tostring(y), tostring(z)))
 	useVolume = not not useVolume -- Retarded plogon
 	if usePathfinding then
 		PathfindAndMoveTo(x, y, z, useVolume)
