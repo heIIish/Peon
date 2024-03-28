@@ -5,7 +5,7 @@ local Condition = require "Condition"
 local Zone = require "Zone"
 local Status = require "Status"
 
-local maxItemsPerExchange = 25
+local maxItemsPerExchange = 15
 local checkSealBuff = true
 
 local Materials = {
@@ -215,7 +215,7 @@ local function GetItemsInInventoryForShop(shopIndex)
 			local inventoryCount = GetItemCount(itemId)
 			if inventoryCount <= 0 then goto NextItem end
 			inventoryItems[itemId] = true
-			inventoryItems.count = inventoryItems.count + 1
+			inventoryItems.count = inventoryItems.count + inventoryCount
 			::NextItem::
 		end
 	end
@@ -245,8 +245,10 @@ local function GetItemsInInventoryTotalCount()
 	return count
 end
 
--- Target("Holy Sheet")
--- CopyTargetCoordinates()
+local _GetInventoryFreeSlotCount = GetInventoryFreeSlotCount
+local function GetInventoryFreeSlotCount()
+	return math.max(_GetInventoryFreeSlotCount() - 1, 0)
+end
 
 while true do
 	local availableShopTotalCount = GetAvailableItemsTotalCount()
@@ -318,7 +320,7 @@ while true do
 		end
 
 		MoveTo(Positions.Sabina, true)
-		if not retry(40, function() return GetDistanceToPoint(table.unpack(Positions.Sabina)) <= 4 end) then
+		if not retry(40, function() return GetDistanceToPoint(table.unpack(Positions.Sabina)) <= 3 end) then
 			echoError("Failed to walk to Idyllshire vendor.")
 			return
 		end
@@ -330,16 +332,18 @@ while true do
 			::BuyShop::
 			local availableShop = GetAvailableItemsForShop(shopIndex)
 			local inventoryShop = GetItemsInInventoryForShop(shopIndex)
-			local inventorySpace = GetInventoryFreeSlotCount()
+			inventorySpace = GetInventoryFreeSlotCount()
 
 			echo("Shop", shopIndex, "items in inventory:", inventoryShop.count)
 
 			if inventorySpace > 0 and #availableShop > 0 then
 				echo("Can buy", #availableShop, "items in Shop", shopIndex .. ".")
-				if not IsInteractingWith("Sabina") then
+				retry(2, function()
+					if IsInteractingWith("Sabina") then return true end
 					Target("Sabina")
 					Interact()
-				end
+					wait(0.25)
+				end)
 				if not retry(2, OpenGordianSubMenu) then echo("retry timed out in a critical spot. Connection issue or developer skill issue?") return end
 				if not retry(2, OpenGordianShopExchange, shopIndex) then echo("retry timed out in a critical spot. Connection issue or developer skill issue?") return end
 
@@ -351,7 +355,7 @@ while true do
 					local purchaseAmount = itemData.amount
 					inventorySpace = math.min(GetInventoryFreeSlotCount(), maxItemsPerExchange)
 					retry(1, ShopExchangeItem, itemShopIndex, math.min(inventorySpace, purchaseAmount))
-					wait(0.3)
+					wait(0.5)
 					retry(3, function()
 						if not IsRequestVisible() then
 							return true
@@ -364,6 +368,7 @@ while true do
 				end
 
 				if #GetAvailableItemsForShop(shopIndex) > 0 and GetInventoryFreeSlotCount() > 0 then
+					echo("Retrying buy from Shop", shopIndex, "because not all items were bought.")
 					goto BuyShop
 				end
 			elseif inventorySpace <= 0 then
@@ -434,6 +439,7 @@ while true do
 			return
 		end
 		PathStop()
+		echo("Starting turn-in of", GetItemsInInventoryTotalCount(), "items.")
 		yield("/deliveroo enable")
 		wait(1)
 		if not retry(300, function() return not DeliverooIsTurnInRunning() end) then
