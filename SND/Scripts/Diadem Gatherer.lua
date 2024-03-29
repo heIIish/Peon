@@ -17,14 +17,16 @@ while true do
 	if not HasStatusId({Status.GiftOfTheLand, Status.GiftOfTheLand2}) and gp >= 50 then
 		local hasEnough = gp >= 100
 		if isMIN then
-			ExecuteAction(hasEnough and Action.MountaineersGift2 or Action.MountaineersGift)
+			yield("/ac \"" .. (hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I") .. "\"")
+			-- ExecuteAction(hasEnough and Action.MountaineersGift2 or Action.MountaineersGift)
 		else
-			ExecuteAction(hasEnough and Action.PioneersGift2 or Action.PioneersGift)
+			yield("/ac \"" .. (hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I") .. "\"")
+			-- ExecuteAction(hasEnough and Action.PioneersGift2 or Action.PioneersGift)
 		end
-		wait(0.2)
+		wait(0.1)
 		goto continue
 	end
 	GatherItemAtIndex(4)
-	wait(0.25)
+	wait(0.2)
 	::continue::
 end
