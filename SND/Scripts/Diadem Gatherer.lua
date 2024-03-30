@@ -2,30 +2,44 @@ table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\L
 require "Util"
 
 local Zone = require "Zone"
-local Action = require "Action"
 local Status = require "Status"
 local Job = require "Job"
 
+local function hasIntegrityBonus()
+	if IsNodeVisible("_TargetInfoMainTarget", 3) then
+		local integrity = tonumber(GetNodeText("_TargetInfoMainTarget", 3):match("Max GP ≥ %d+ → Gathering Attempts/Integrity %+(%d+)"))
+		return integrity and integrity >= 5
+	end
+end
+
 while true do
 	if not (IsInZone(Zone.Diadem) and IsGathering()) then wait(1) goto continue end
+	if not IsAddonReady("_TargetInfoMainTarget") then wait(0.5) goto continue end
 
 	local jobId = GetClassJobId()
 	local isMIN, isBTN = jobId == Job.MIN, jobId == Job.BTN
 	if not (isMIN or isBTN) then wait(1) goto continue end
 
 	local gp = GetGp()
-	if not HasStatusId({Status.GiftOfTheLand, Status.GiftOfTheLand2}) and gp >= 50 then
+	if hasIntegrityBonus() and gp >= 500 then
+		if HasStatusId({Status.GatheringYieldUp}) then goto GatherItem end
+
+		ExecuteActionByName(isMIN and "King's Yield II" or "Blessed Harvest II")
+		wait(0.1)
+		goto continue
+	elseif gp >= 50 then
+		if HasStatusId({Status.GiftOfTheLand, Status.GiftOfTheLand2}) then goto GatherItem end
+
 		local hasEnough = gp >= 100
 		if isMIN then
-			yield("/ac \"" .. (hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I") .. "\"")
-			-- ExecuteAction(hasEnough and Action.MountaineersGift2 or Action.MountaineersGift)
+			ExecuteActionByName(hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I")
 		else
-			yield("/ac \"" .. (hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I") .. "\"")
-			-- ExecuteAction(hasEnough and Action.PioneersGift2 or Action.PioneersGift)
+			ExecuteActionByName(hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I")
 		end
 		wait(0.1)
 		goto continue
 	end
+	::GatherItem::
 	GatherItemAtIndex(4)
 	wait(0.2)
 	::continue::

@@ -75,6 +75,24 @@ local function ArgCheck(...)
 	end
 end
 
+local calls = 0
+function retry(timeout, func, ...)
+	calls = calls + 1
+	ArgCheck({timeout, "number"}, {f, "function"})
+	local start = os.clock()
+	local success = false
+	repeat
+		success = func(...)
+		wait(0.1)
+	until success or os.clock() - start >= timeout
+
+	if not success then
+		echo("retry for function " .. (debug.getinfo(func).name or tostring(calls)) .. " timed out")
+	end
+
+	return success
+end
+
 function Call(paramString)
 	ArgCheck({paramString, "string"})
 	yield("/pcallback " .. paramString)
@@ -249,22 +267,9 @@ function MoveTo(position, usePathfinding, useVolume)
 	end
 end
 
-local calls = 0
-function retry(timeout, f, ...)
-	calls = calls + 1
-	ArgCheck({timeout, "number"}, {f, "function"})
-	local start = os.clock()
-	local success = false
-	repeat
-		success = f(...)
-		wait(0.1)
-	until success or os.clock() - start >= timeout
-
-	if not success then
-		echo("retry for function " .. (debug.getinfo(f).name or tostring(calls)) .. " timed out")
-	end
-
-	return success
+function ExecuteActionByName(name)
+	ArgCheck({name, "string"})
+	yield("/ac \"" .. name .. "\"")
 end
 
 _G.echo = echo
