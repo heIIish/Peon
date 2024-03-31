@@ -2,6 +2,7 @@ table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\L
 require "Util"
 
 local Config = {
+	GatherSlot = 4,
 	ShootMobs = true
 }
 
@@ -84,7 +85,7 @@ while true do
 		goto continue
 	end
 	::GatherItem::
-	GatherItemAtIndex(4)
+	GatherItemAtIndex(Config.GatherSlot)
 	wait(0.2)
 	::continue::
 end
