@@ -4,6 +4,7 @@ require "Util"
 local Zone = require "Zone"
 local Status = require "Status"
 local Job = require "Job"
+local Condition = require "Condition"
 
 local function hasIntegrityBonus()
 	if IsNodeVisible("_TargetInfoMainTarget", 3) then
@@ -12,8 +13,35 @@ local function hasIntegrityBonus()
 	end
 end
 
+local lastMobFail = -math.huge
 while true do
-	if not (IsInZone(Zone.Diadem) and IsGathering()) then wait(1) goto continue end
+	if not IsInZone(Zone.Diadem) then wait(1) goto continue end
+	if not IsGathering() then
+		if GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 8 then wait(1) goto continue end
+		local mobs = GetNearbyObjectNames(22 * 22, require("ObjectKind").BattleNpc)
+		for i = 0, mobs.Count - 1 do
+			local mobName = mobs[i]
+			if mobName and mobName ~= "Corrupted Sprite" and GetObjectHP(mobName) > 0 then
+				yield("/visland pause")
+				local hasDismounted = retry(5, function()
+					return Dismount()
+				end)
+				if hasDismounted then
+					Target(mobName)
+					if not retry(6, function()
+						ExecuteActionByName("Duty Action I")
+						return GetObjectHP(mobName) <= 0
+					end) then
+						lastMobFail = os.clock()
+						echo("Failed to kill", mobName)
+					end
+				end
+				yield("/visland resume")
+				break
+			end
+		end
+		goto continue
+	end
 	if not IsAddonReady("_TargetInfoMainTarget") then wait(0.5) goto continue end
 
 	local jobId = GetClassJobId()

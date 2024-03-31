@@ -78,7 +78,7 @@ end
 local calls = 0
 function retry(timeout, func, ...)
 	calls = calls + 1
-	ArgCheck({timeout, "number"}, {f, "function"})
+	ArgCheck({timeout, "number"}, {func, "function"})
 	local start = os.clock()
 	local success = false
 	repeat
@@ -114,18 +114,20 @@ function Interact()
 	yield("/pinteract")
 end
 
+function IsMounted()
+	return GetCharacterCondition(Condition.Mounted)
+end
+
 function Mount(name)
 	if not IsPlayerAvailable() or GetCharacterCondition(Condition.Casting) then return end
-	if GetCharacterCondition(Condition.Mounted) then return true end
+	if IsMounted() then return true end
 	name = name or "Megaloambystoma"
 	yield("/mount " .. name)
 end
 
 function Dismount()
-	if GetCharacterCondition(Condition.Mounted) then
-		yield("/ac Dismount")
-	end
-	return true
+	if not IsMounted() then return true end
+	ExecuteActionByName("Dismount")
 end
 
 function CopyTargetCoordinates()
