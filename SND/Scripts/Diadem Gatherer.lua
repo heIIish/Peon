@@ -1,10 +1,14 @@
 table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\LuaLibs", os.getenv("APPDATA")))
 require "Util"
 
+local Config = {
+	ShootMobs = true
+}
+
 local Zone = require "Zone"
 local Status = require "Status"
 local Job = require "Job"
-local Condition = require "Condition"
+local ObjectKind = require "ObjectKind"
 
 local function hasIntegrityBonus()
 	if IsNodeVisible("_TargetInfoMainTarget", 3) then
@@ -15,14 +19,24 @@ end
 
 local lastMobFail = -math.huge
 while true do
-	if not IsInZone(Zone.Diadem) then wait(1) goto continue end
+	if not IsInZone(Zone.Diadem) then
+		if IsVislandRouteRunning() then
+			yield("/visland stop")
+		end
+		wait(1)
+		goto continue
+	end
 	if not IsGathering() then
-		if GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 8 then wait(1) goto continue end
-		local mobs = GetNearbyObjectNames(22 * 22, require("ObjectKind").BattleNpc)
+		if not Config.ShootMobs or GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 20 then wait(1) goto continue end
+		local mobs = GetNearbyObjectNames(22 * 22, ObjectKind.BattleNpc)
 		for i = 0, mobs.Count - 1 do
 			local mobName = mobs[i]
 			if mobName and mobName ~= "Corrupted Sprite" and GetObjectHP(mobName) > 0 then
-				yield("/visland pause")
+				local isRouteRunning = IsVislandRouteRunning()
+
+				if isRouteRunning then
+					yield("/visland pause")
+				end
 				local hasDismounted = retry(5, function()
 					return Dismount()
 				end)
@@ -36,7 +50,9 @@ while true do
 						echo("Failed to kill", mobName)
 					end
 				end
-				yield("/visland resume")
+				if isRouteRunning then
+					yield("/visland resume")
+				end
 				break
 			end
 		end
