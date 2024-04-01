@@ -1,12 +1,14 @@
 table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\LuaLibs", os.getenv("APPDATA")))
 require "Util"
 
+local Config = {
+	maxItemsPerExchange = 15,
+	checkSealBuff = true
+}
+
 local Condition = require "Condition"
 local Zone = require "Zone"
 local Status = require "Status"
-
-local maxItemsPerExchange = 15
-local checkSealBuff = true
 
 local Materials = {
 	GordianLens = 12674,
@@ -261,7 +263,7 @@ while true do
 		return
 	end
 
-	if checkSealBuff and not HasStatusId({Status.SealSweetener}) then
+	if Config.checkSealBuff and not HasStatusId({Status.SealSweetener, Status.PrioritySealAllowance}) then
 		echoError("No Seal Sweetener!")
 		return
 	end
@@ -326,7 +328,7 @@ while true do
 		end
 		PathStop()
 		-- Dismount()
-		wait(0.5)
+		wait(1.5)
 
 		for shopIndex = 1, shopCount do
 			::BuyShop::
@@ -338,14 +340,18 @@ while true do
 
 			if inventorySpace > 0 and #availableShop > 0 then
 				echo("Can buy", #availableShop, "items in Shop", shopIndex .. ".")
-				retry(2, function()
+				if not retry(6, function()
 					if IsInteractingWith("Sabina") then return true end
 					Target("Sabina")
+					wait(0.1)
 					Interact()
-					wait(0.25)
-				end)
-				if not retry(2, OpenGordianSubMenu) then echo("retry timed out in a critical spot. Connection issue or developer skill issue?") return end
-				if not retry(2, OpenGordianShopExchange, shopIndex) then echo("retry timed out in a critical spot. Connection issue or developer skill issue?") return end
+					wait(0.4)
+				end) then
+					echoError("Failed to interact.")
+					return
+				end
+				if not retry(2, OpenGordianSubMenu) then echo("Retry timed out in a critical spot. Connection issue or developer skill issue?") return end
+				if not retry(2, OpenGordianShopExchange, shopIndex) then echo("Retry timed out in a critical spot. Connection issue or developer skill issue?") return end
 
 				for i, itemData in ipairs(availableShop) do
 					if GetInventoryFreeSlotCount() <= 0 then goto continue end
@@ -353,13 +359,10 @@ while true do
 					if inventoryShop[itemId] then echo("Skipping item", itemId, "because it was already purchased.") goto continue end
 					local itemShopIndex = itemData.shopIndex
 					local purchaseAmount = itemData.amount
-					inventorySpace = math.min(GetInventoryFreeSlotCount(), maxItemsPerExchange)
+					inventorySpace = math.min(GetInventoryFreeSlotCount(), Config.maxItemsPerExchange)
 					retry(1, ShopExchangeItem, itemShopIndex, math.min(inventorySpace, purchaseAmount))
-					wait(0.5)
 					retry(3, function()
-						if not IsRequestVisible() then
-							return true
-						end
+						return not IsRequestVisible()
 					end)
 					-- echo("Bought?")
 
@@ -442,7 +445,7 @@ while true do
 		echo("Starting turn-in of", GetItemsInInventoryTotalCount(), "items.")
 		yield("/deliveroo enable")
 		wait(1)
-		if not retry(300, function() return not DeliverooIsTurnInRunning() end) then
+		if not retry(600, function() return not DeliverooIsTurnInRunning() end) then
 			echoError("Deliveroo timed out.")
 			return
 		end

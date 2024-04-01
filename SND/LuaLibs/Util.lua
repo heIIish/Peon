@@ -220,9 +220,9 @@ end
 
 function ShopExchangeItem(itemShopIndex, amount)
 	ArgCheck({itemShopIndex, "number"}, {amount, "number"})
-	if not IsShopExchangeVisible() or IsRequestVisible() then return end
+	if not IsShopExchangeVisible() then return end
 	Call("ShopExchangeItem true 0 " .. (itemShopIndex - 1) .. " " .. amount)
-	return true
+	return IsRequestVisible()
 end
 
 function CloseDialogueMenu()
