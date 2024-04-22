@@ -3,7 +3,8 @@ require "Util"
 
 local Config = {
 	GatherSlot = 4,
-	ShootMobs = true
+	ShootMobs = true,
+	MobSearchRadius = 20
 }
 
 local Zone = require "Zone"
@@ -27,9 +28,16 @@ while true do
 		wait(1)
 		goto continue
 	end
+
+	local jobId = GetClassJobId()
+	local isMIN, isBTN = jobId == Job.MIN, jobId == Job.BTN
+	if not (isMIN or isBTN) then wait(1) goto continue end
+
 	if not IsGathering() then
 		if not Config.ShootMobs or GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 20 then wait(1) goto continue end
-		local mobs = GetNearbyObjectNames(22 * 22, ObjectKind.BattleNpc)
+
+		local radius = isBTN and 10 or Config.MobSearchRadius
+		local mobs = GetNearbyObjectNames(radius * radius, ObjectKind.BattleNpc)
 		for i = 0, mobs.Count - 1 do
 			local mobName = mobs[i]
 			if mobName and mobName ~= "Corrupted Sprite" and GetObjectHP(mobName) > 0 then
@@ -57,14 +65,10 @@ while true do
 				break
 			end
 		end
+		wait(0.5)
 		goto continue
 	end
 	if not IsAddonReady("_TargetInfoMainTarget") then wait(0.5) goto continue end
-
-	local jobId = GetClassJobId()
-	local isMIN, isBTN = jobId == Job.MIN, jobId == Job.BTN
-	if not (isMIN or isBTN) then wait(1) goto continue end
-
 	local gp = GetGp()
 	if hasIntegrityBonus() and gp >= 500 then
 		if HasStatusId({Status.GatheringYieldUp}) then goto GatherItem end

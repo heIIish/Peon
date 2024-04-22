@@ -130,6 +130,10 @@ function Dismount()
 	ExecuteActionByName("Dismount")
 end
 
+function GetPlayerPosition()
+	return {GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos()}
+end
+
 function CopyTargetCoordinates()
 	local x, y, z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
 	SetClipboard(string.format("%s, %s, %s", tostring(x), tostring(y), tostring(z)))

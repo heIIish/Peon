@@ -322,13 +322,13 @@ while true do
 		end
 
 		MoveTo(Positions.Sabina, true)
-		if not retry(40, function() return GetDistanceToPoint(table.unpack(Positions.Sabina)) <= 3 end) then
+		if not retry(40, function() return GetDistanceToPoint(table.unpack(Positions.Sabina)) <= 2 end) then
 			echoError("Failed to walk to Idyllshire vendor.")
 			return
 		end
 		PathStop()
 		-- Dismount()
-		wait(1.5)
+		wait(0.5)
 
 		for shopIndex = 1, shopCount do
 			::BuyShop::
@@ -340,16 +340,31 @@ while true do
 
 			if inventorySpace > 0 and #availableShop > 0 then
 				echo("Can buy", #availableShop, "items in Shop", shopIndex .. ".")
-				if not retry(6, function()
+				if not retry(2, function()
 					if IsInteractingWith("Sabina") then return true end
 					Target("Sabina")
 					wait(0.1)
 					Interact()
 					wait(0.4)
 				end) then
-					echoError("Failed to interact.")
+					echoError("Failed to interact. Retrying...")
+					local position = GetPlayerPosition()
+					position[1] = position[1] - 0.5
+					MoveTo(position)
+					if not retry(4, function()
+						if IsInteractingWith("Sabina") then return true end
+						Target("Sabina")
+						wait(0.1)
+						Interact()
+						wait(0.4)
+					end) then
+						echoError("Failed to interact.")
+						return
+					end
+
 					return
 				end
+
 				if not retry(2, OpenGordianSubMenu) then echo("Retry timed out in a critical spot. Connection issue or developer skill issue?") return end
 				if not retry(2, OpenGordianShopExchange, shopIndex) then echo("Retry timed out in a critical spot. Connection issue or developer skill issue?") return end
 
@@ -360,7 +375,11 @@ while true do
 					local itemShopIndex = itemData.shopIndex
 					local purchaseAmount = itemData.amount
 					inventorySpace = math.min(GetInventoryFreeSlotCount(), Config.maxItemsPerExchange)
-					retry(1, ShopExchangeItem, itemShopIndex, math.min(inventorySpace, purchaseAmount))
+					retry(1, function()
+						local success = ShopExchangeItem(itemShopIndex, math.min(inventorySpace, purchaseAmount))
+						wait(0.3)
+						return success
+					end)
 					retry(3, function()
 						return not IsRequestVisible()
 					end)
