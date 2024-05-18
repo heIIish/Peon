@@ -5,6 +5,9 @@ table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\L
 require "Util"
 ]]
 
+local DEBUG = true
+local entrypointLineOffset = 4
+
 local f = string.format
 
 local _require = require
@@ -68,29 +71,10 @@ local function ArgCheck(...)
 			table.insert(expectedTypes, expectedType)
 		end
 
-		local callerInfo = debug.getinfo(2)
-		local callerName = callerInfo and callerInfo.name or "[none]"
+		local callerName = debug.getinfo(2, "n").name or "[none]"
 		local traceback = debug.traceback(nil, 2):gsub("\n[^\n]*$", ""):gsub("^[^\n]*\n", "")
 		error(f("\nWrong arg type when calling \"%s(%s)\"\n%sexpected \"%s(%s)\"\n%s", callerName, table.concat(argTypes, ", "), string.rep(" ", 36), callerName, table.concat(expectedTypes, ", "), traceback), 2)
 	end
-end
-
-local calls = 0
-function retry(timeout, func, ...)
-	calls = calls + 1
-	ArgCheck({timeout, "number"}, {func, "function"})
-	local start = os.clock()
-	local success = false
-	repeat
-		success = func(...)
-		wait(0.1)
-	until success or os.clock() - start >= timeout
-
-	if not success then
-		echo("retry for function " .. (debug.getinfo(func).name or tostring(calls)) .. " timed out")
-	end
-
-	return success
 end
 
 function Call(paramString)
@@ -173,6 +157,7 @@ function IsGuildLeveInToDoList(name)
 	end
 end
 
+-- TODO: Switch to node id chains instead of node position chains
 function IsGuildLeveListVisible()
 	return IsGuildLeveMenuVisible() and IsNodeVisible("GuildLeve", 11)
 end
@@ -188,7 +173,7 @@ end
 
 function GetGuildLeveAllowances()
 	if not IsGuildLeveMenuVisible() then return end
-	if not IsNodeVisible("GuildLeve", 5) then return end
+	-- if not IsNodeVisible("GuildLeve", 5) then return end -- FIX ME
 	return tonumber(GetNodeText("GuildLeve", 5, 2))
 end
 
@@ -226,30 +211,34 @@ function ShopExchangeItem(itemShopIndex, amount)
 	ArgCheck({itemShopIndex, "number"}, {amount, "number"})
 	if not IsShopExchangeVisible() then return end
 	Call("ShopExchangeItem true 0 " .. (itemShopIndex - 1) .. " " .. amount)
-	return IsRequestVisible()
+	return true
 end
 
 function CloseDialogueMenu()
-	if not IsDialogueMenuVisible() then return true end
-	Call("SelectIconString true -1")
+	if IsDialogueMenuVisible() then
+		Call("SelectIconString true -1")
+	end
 	return true
 end
 
 function CloseDialogueSubMenu()
-	if not IsDialogueSubMenuVisible() then return true end
-	Call("SelectString true -1")
+	if IsDialogueSubMenuVisible() then
+		Call("SelectString true -1")
+	end
 	return true
 end
 
 function CloseShopExchange()
-	if not IsShopExchangeVisible() then return true end
-	Call("ShopExchangeItem true -1")
+	if IsShopExchangeVisible() then
+		Call("ShopExchangeItem true -1")
+	end
 	return true
 end
 
 function CloseRequest()
-	if not IsRequestVisible() then return true end
-	Call("Request true -1")
+	if IsRequestVisible() then
+		Call("Request true -1")
+	end
 	return true
 end
 
@@ -281,3 +270,46 @@ end
 _G.echo = echo
 _G.ArgCheck = ArgCheck
 _G.wait = wait
+
+local debugEnabled = false
+local functionNames = {}
+
+function retry(timeout, func, ...)
+	ArgCheck({timeout, "number"}, {func, "function"})
+	local start = os.clock()
+	local success = false
+	repeat
+		success = func(...)
+		wait(0.1)
+	until success or os.clock() - start >= timeout
+
+	if debugEnabled and not success then
+		local functionName = functionNames[func]
+		local lineNumber = debug.getinfo(2).currentline - entrypointLineOffset
+		echo(f("Retry for %s timed out. (Line %d)", (functionName and "function \"" .. functionName .. "\"" or "unnamed function"), lineNumber))
+	end
+
+	return success
+end
+
+function EnableDebugMode()
+	if not DEBUG or debugEnabled then return end
+	debugEnabled = true
+
+	-- Stupid hack since I can't figure out how to get func name at func pointer
+	for i, v in pairs(_G) do
+		if type(v) == "function" then
+			functionNames[v] = i
+		end
+	end
+
+	local i = 1
+	while true do
+		local n, v = debug.getlocal(2, i)
+		if not n then break end
+		if type(v) == "function" and not functionNames[v] then
+			functionNames[v] = n
+		end
+		i = i + 1
+	end
+end

@@ -252,6 +252,8 @@ local function GetInventoryFreeSlotCount()
 	return math.max(_GetInventoryFreeSlotCount() - 1, 0)
 end
 
+EnableDebugMode()
+
 while true do
 	local availableShopTotalCount = GetAvailableItemsTotalCount()
 	local availableShopIgnoreInventoryTotalCount = GetAvailableItemsTotalCount(true)
@@ -260,11 +262,6 @@ while true do
 
 	if availableShopIgnoreInventoryTotalCount <= 0 and inventoryShopTotalCount <= 0 then
 		echoError("You have no materials nor any items to turn in.")
-		return
-	end
-
-	if Config.checkSealBuff and not HasStatusId({Status.SealSweetener, Status.PrioritySealAllowance}) then
-		echoError("No Seal Sweetener!")
 		return
 	end
 
@@ -349,7 +346,7 @@ while true do
 				end) then
 					echoError("Failed to interact. Retrying...")
 					local position = GetPlayerPosition()
-					position[1] = position[1] - 0.5
+					position[1] = position[1] - 0.1
 					MoveTo(position)
 					if not retry(4, function()
 						if IsInteractingWith("Sabina") then return true end
@@ -361,8 +358,6 @@ while true do
 						echoError("Failed to interact.")
 						return
 					end
-
-					return
 				end
 
 				if not retry(2, OpenGordianSubMenu) then echo("Retry timed out in a critical spot. Connection issue or developer skill issue?") return end
@@ -375,14 +370,13 @@ while true do
 					local itemShopIndex = itemData.shopIndex
 					local purchaseAmount = itemData.amount
 					inventorySpace = math.min(GetInventoryFreeSlotCount(), Config.maxItemsPerExchange)
-					retry(1, function()
-						local success = ShopExchangeItem(itemShopIndex, math.min(inventorySpace, purchaseAmount))
-						wait(0.3)
-						return success
-					end)
-					retry(3, function()
+					retry(1, ShopExchangeItem, itemShopIndex, math.min(inventorySpace, purchaseAmount))
+					wait(0.5)
+					local function RequestNotVisible()
 						return not IsRequestVisible()
-					end)
+					end
+					retry(3, RequestNotVisible)
+					wait(0.25)
 					-- echo("Bought?")
 
 					CloseRequest()
@@ -422,7 +416,7 @@ while true do
 			wait(0.5)
 		end
 
-		if GetItemCount(AetheryteTickets.Ligma) <= 0 then
+		if not IsInZone(Zone.LimsaLominsaUpperDecks) and GetItemCount(AetheryteTickets.Ligma) <= 0 then
 			echoError("NO LIGMA GC AETHERYTE TICKETS IDIOT.")
 			return
 		end
@@ -461,6 +455,12 @@ while true do
 			return
 		end
 		PathStop()
+
+		if Config.checkSealBuff and not HasStatusId({Status.SealSweetener, Status.PrioritySealAllowance}) then
+			echoError("No Seal Sweetener!")
+			return
+		end
+
 		echo("Starting turn-in of", GetItemsInInventoryTotalCount(), "items.")
 		yield("/deliveroo enable")
 		wait(1)

@@ -13,10 +13,13 @@ local Job = require "Job"
 local ObjectKind = require "ObjectKind"
 
 local function hasIntegrityBonus()
-	if IsNodeVisible("_TargetInfoMainTarget", 3) then
-		local integrity = tonumber(GetNodeText("_TargetInfoMainTarget", 3):match("Max GP ≥ %d+ → Gathering Attempts/Integrity %+(%d+)"))
-		return integrity and integrity >= 5
-	end
+	local integrity = tonumber(GetNodeText("_TargetInfoMainTarget", 3):match("Max GP ≥ %d+ → Gathering Attempts/Integrity %+(%d+)"))
+	return integrity and integrity >= 5
+end
+
+local function isFullHealth()
+	local nodeHealth = GetNodeText("_TargetInfoMainTarget", 7)
+	return nodeHealth == " ??"
 end
 
 local lastMobFail = -math.huge
@@ -69,24 +72,27 @@ while true do
 		goto continue
 	end
 	if not IsAddonReady("_TargetInfoMainTarget") then wait(0.5) goto continue end
-	local gp = GetGp()
-	if hasIntegrityBonus() and gp >= 500 then
-		if HasStatusId({Status.GatheringYieldUp}) then goto GatherItem end
+	if not isFullHealth() then goto GatherItem end
+	do
+		local gp = GetGp()
+		if hasIntegrityBonus() and gp >= 500 then
+			if HasStatusId({Status.GatheringYieldUp}) then goto GatherItem end
 
-		ExecuteActionByName(isMIN and "King's Yield II" or "Blessed Harvest II")
-		wait(0.1)
-		goto continue
-	elseif gp >= 50 then
-		if HasStatusId({Status.GiftOfTheLand, Status.GiftOfTheLand2}) then goto GatherItem end
+			ExecuteActionByName(isMIN and "King's Yield II" or "Blessed Harvest II")
+			wait(0.1)
+			goto continue
+		elseif gp >= 50 then
+			if HasStatusId({Status.GiftOfTheLand, Status.GiftOfTheLand2}) then goto GatherItem end
 
-		local hasEnough = gp >= 100
-		if isMIN then
-			ExecuteActionByName(hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I")
-		else
-			ExecuteActionByName(hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I")
+			local hasEnough = gp >= 100
+			if isMIN then
+				ExecuteActionByName(hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I")
+			else
+				ExecuteActionByName(hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I")
+			end
+			wait(0.1)
+			goto continue
 		end
-		wait(0.1)
-		goto continue
 	end
 	::GatherItem::
 	GatherItemAtIndex(Config.GatherSlot)
