@@ -1,4 +1,5 @@
 return {
+	WellFed = 48,
 	GatheringYieldUp = 219,
 	SealSweetener = 414,
 	GiftOfTheLand2 = 759,

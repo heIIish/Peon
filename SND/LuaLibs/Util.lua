@@ -157,9 +157,8 @@ function IsGuildLeveInToDoList(name)
 	end
 end
 
--- TODO: Switch to node id chains instead of node position chains
 function IsGuildLeveListVisible()
-	return IsGuildLeveMenuVisible() and IsNodeVisible("GuildLeve", 11)
+	return IsGuildLeveMenuVisible() and IsNodeVisible("GuildLeve", 1, 23)
 end
 
 function IsGuildLeveInNodeList(name)
@@ -173,7 +172,7 @@ end
 
 function GetGuildLeveAllowances()
 	if not IsGuildLeveMenuVisible() then return end
-	-- if not IsNodeVisible("GuildLeve", 5) then return end -- FIX ME
+	if not IsNodeVisible("GuildLeve", 1, 28, 30) then return end
 	return tonumber(GetNodeText("GuildLeve", 5, 2))
 end
 
