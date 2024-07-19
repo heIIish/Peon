@@ -1,0 +1,1 @@
+robocopy .\Peon %APPDATA%\XIVLauncher\pluginConfigs\Peon /mir

@@ -1,16 +1,15 @@
-table.insert(snd.require.paths, string.format("%s\\XIVLauncher\\pluginConfigs\\LuaLibs", os.getenv("APPDATA")))
-require "Util"
-
 local Config = {
 	GatherSlot = 4,
 	ShootMobs = true,
 	MobSearchRadius = 20
 }
 
-local Zone = require "Zone"
-local Status = require "Status"
-local Job = require "Job"
-local ObjectKind = require "ObjectKind"
+local Zone = require "Enums\\Zone"
+local Status = require "Enums\\Status"
+local Job = require "Enums\\Job"
+local ObjectKind = require "Enums\\ObjectKind"
+local Util = require "Libs\\Util"
+local UI = require "Libs\\UI"
 
 local function hasIntegrityBonus()
 	local integrity = tonumber(GetNodeText("_TargetInfoMainTarget", 3):match("Max GP ≥ %d+ → Gathering Attempts/Integrity %+(%d+)"))
@@ -36,7 +35,7 @@ while true do
 	local isMIN, isBTN = jobId == Job.MIN, jobId == Job.BTN
 	if not (isMIN or isBTN) then wait(1) goto continue end
 
-	if not IsGathering() then
+	if not IsAddonVisible("Gathering") then
 		if not Config.ShootMobs or GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 20 then wait(1) goto continue end
 
 		local radius = isBTN and 10 or Config.MobSearchRadius
@@ -50,12 +49,12 @@ while true do
 					yield("/visland pause")
 				end
 				local hasDismounted = retry(5, function()
-					return Dismount()
+					return Util.Dismount()
 				end)
 				if hasDismounted then
-					Target(mobName)
+					Util.Target(mobName)
 					if not retry(6, function()
-						ExecuteActionByName("Duty Action I")
+						Util.ExecuteActionByName("Duty Action I")
 						return GetObjectHP(mobName) <= 0
 					end) then
 						lastMobFail = os.clock()
@@ -78,7 +77,7 @@ while true do
 		if hasIntegrityBonus() and gp >= 500 then
 			if HasStatusId({Status.GatheringYieldUp}) then goto GatherItem end
 
-			ExecuteActionByName(isMIN and "King's Yield II" or "Blessed Harvest II")
+			Util.ExecuteActionByName(isMIN and "King's Yield II" or "Blessed Harvest II")
 			wait(0.1)
 			goto continue
 		elseif gp >= 50 then
@@ -86,16 +85,16 @@ while true do
 
 			local hasEnough = gp >= 100
 			if isMIN then
-				ExecuteActionByName(hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I")
+				Util.ExecuteActionByName(hasEnough and "Mountaineer's Gift II" or "Mountaineer's Gift I")
 			else
-				ExecuteActionByName(hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I")
+				Util.ExecuteActionByName(hasEnough and "Pioneer's Gift II" or "Pioneer's Gift I")
 			end
 			wait(0.1)
 			goto continue
 		end
 	end
 	::GatherItem::
-	GatherItemAtIndex(Config.GatherSlot)
+	UI.GatherItemAtIndex(Config.GatherSlot)
 	wait(0.2)
 	::continue::
 end
