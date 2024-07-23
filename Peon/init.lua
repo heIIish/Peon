@@ -37,8 +37,12 @@ end
 -- Lowest interval seems to be 0.001s which actually waits for 0.0015s (?)
 local minWait = 0.001
 function wait(seconds)
-	seconds = seconds and math.max(seconds, minWait) or minWait
-	ArgCheck({seconds, "number"})
+	if seconds == nil then
+		seconds = minWait
+	else
+		ArgCheck({seconds, "number"})
+		seconds = math.max(seconds, minWait)
+	end
 	yield("/wait " .. seconds)
 end
 

@@ -90,7 +90,7 @@ function UI.IsGuildLeveInGuildLeveList(name)
 end
 
 function UI.GetGuildLeveAllowances()
-	if not UI.IsGuildLeveMenuVisible() then return end
+	if not UI.IsGuildLeveListVisible() then return end
 	if not IsNodeVisible("GuildLeve", 1, 28, 30) then return end
 	return tonumber(GetNodeText("GuildLeve", 5, 2))
 end
