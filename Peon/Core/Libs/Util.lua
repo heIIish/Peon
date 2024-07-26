@@ -171,11 +171,11 @@ function Util.Repair(threshold)
 	end)
 
 	if startedRepair then
-		local startRepairingCondition = os.clock()
+		local repairConditionStartTime = os.clock()
 		retry(3.5, function()
 			return not GetCharacterCondition(Condition.Occupied39)
 		end)
-		echoDebug("Repair finished in %.3f seconds.", os.clock() - startRepairingCondition)
+		echoDebug("Finished repairing in %.3f seconds.", os.clock() - repairConditionStartTime)
 	else
 		echoDebug("Failed to start repair.")
 	end
