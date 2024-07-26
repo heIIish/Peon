@@ -1,6 +1,7 @@
 local PEON_DIR = os.getenv("APPDATA") .. "\\XIVLauncher\\pluginConfigs\\Peon\\"
 local SCRIPTS_DIR = PEON_DIR .. "Scripts\\"
-table.insert(snd.require.paths, PEON_DIR .. "Core\\")
+local REQUIRE_PATHS = snd.require.paths
+table.insert(REQUIRE_PATHS, PEON_DIR .. "Core\\")
 
 local Vector3 = require "Classes\\Vector3"
 local Debug = require "Libs\\Debug"
@@ -130,11 +131,26 @@ end
 _G.Vector3 = Vector3
 _G.Peon = true
 
-return function(scriptPath)
-	local func = loadfile(SCRIPTS_DIR .. scriptPath)
-	if func then
-		func()
+local function getfenv(func)
+	local level = 1
+    repeat
+      local name, value = debug.getupvalue(func, level)
+      if name == '_ENV' then return value end
+      level = level + 1
+    until name == nil
+end
+
+return function(scriptName)
+	local scriptFolderPath = SCRIPTS_DIR .. scriptName
+	local scriptFunction = loadfile(scriptFolderPath .. "\\source.lua")
+	if scriptFunction then
+		local configFunction = loadfile(scriptFolderPath .. "\\config.lua")
+		if configFunction then
+			getfenv(scriptFunction).Configuration = configFunction()
+		end
+		table.insert(REQUIRE_PATHS, scriptFolderPath)
+		scriptFunction()
 	else
-		error(string.format("Failed to find script file \"%s\" in Scripts directory.", scriptPath), 2)
+		error(string.format("Failed to find script file \"%s\" in Scripts directory.", scriptName), 2)
 	end
 end

@@ -2,7 +2,8 @@ local UI = require "Libs\\UI"
 local Condition = require "Enums\\Condition"
 local Debug = require "Libs\\Debug"
 
-local itemIndex = 1
+local itemIndex = Configuration.ItemIndex
+
 local function OpenContextMenu()
 	if not UI.Callback("MateriaAttach", 4, itemIndex - 1, 1, 0) then
 		echoError("Failed to open context menu (materia melding window isn't open).")

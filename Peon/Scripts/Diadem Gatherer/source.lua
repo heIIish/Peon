@@ -1,9 +1,3 @@
-local Config = {
-	GatherSlot = 4,
-	ShootMobs = true,
-	MobSearchRadius = 20
-}
-
 local Zone = require "Enums\\Zone"
 local Status = require "Enums\\Status"
 local Job = require "Enums\\Job"
@@ -36,9 +30,9 @@ while true do
 	if not (isMIN or isBTN) then wait(1) goto continue end
 
 	if not IsAddonVisible("Gathering") then
-		if not Config.ShootMobs or GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 20 then wait(1) goto continue end
+		if not Configuration.ShootMobs or GetDiademAetherGaugeBarCount() <= 0 or os.clock() - lastMobFail < 20 then wait(1) goto continue end
 
-		local radius = isBTN and 10 or Config.MobSearchRadius
+		local radius = isBTN and 10 or Configuration.MobSearchRadius
 		local mobs = GetNearbyObjectNames(radius * radius, ObjectKind.BattleNpc)
 		for i = 0, mobs.Count - 1 do
 			local mobName = mobs[i]
@@ -94,7 +88,7 @@ while true do
 		end
 	end
 	::GatherItem::
-	UI.GatherItemAtIndex(Config.GatherSlot)
+	UI.GatherItemAtIndex(Configuration.GatherSlot)
 	wait(0.2)
 	::continue::
 end
