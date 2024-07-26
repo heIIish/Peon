@@ -139,10 +139,12 @@ if extracted then
 end
 
 local fails = 0
+local maxFails = 3
 while true do
-	if not (TryMeldMateria() and TryExtractMateria()) then
+	if not (TryMeldMateria() or TryExtractMateria()) then
 		fails = fails + 1
-		if fails >= 3 then
+		echoError(string.format("Something went wrong... %d/%d fail(s).", fails, maxFails))
+		if fails >= maxFails then
 			echoError("Too many failed melding attempts, aborting.")
 			return
 		end
