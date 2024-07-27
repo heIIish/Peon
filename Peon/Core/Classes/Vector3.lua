@@ -27,10 +27,14 @@ function Vector3:Unit()
 end
 
 function Vector3:__add(vector)
+	local t = typeof(vector)
+	assert(t == "Vector3", string.format("Vector3:__add - Vector3 expected, got %s", t))
 	return createVector3(self.X + vector.X, self.Y + vector.Y, self.Z + vector.Z)
 end
 
 function Vector3:__sub(vector)
+	local t = typeof(vector)
+	assert(t == "Vector3", string.format("Vector3:__sub - Vector3 expected, got %s", t))
 	return createVector3(self.X - vector.X, self.Y - vector.Y, self.Z - vector.Z)
 end
 
@@ -40,6 +44,8 @@ function Vector3:__mul(vector)
 		return createVector3(self.X * vector.X, self.Y * vector.Y, self.Z * vector.Z)
 	elseif t == "number" then
 		return createVector3(self.X * vector, self.Y * vector, self.Z * vector)
+	else
+		error(string.format("Vector3:__mul - Vector3 or number expected, got %s", t))
 	end
 end
 
@@ -49,10 +55,14 @@ function Vector3:__div(vector)
 		return createVector3(self.X / vector.X, self.Y / vector.Y, self.Z / vector.Z)
 	elseif t == "number" then
 		return createVector3(self.X / vector, self.Y / vector, self.Z / vector)
+	else
+		error(string.format("Vector3:__div - Vector3 or number expected, got %s", t))
 	end
 end
 
 function Vector3:__eq(vector)
+	local t = typeof(vector)
+	assert(t == "Vector3", string.format("Vector3:__eq - Vector3 expected, got %s", t))
 	return self.X == vector.X and self.Y == vector.Y and self.Z == vector.Z
 end
 

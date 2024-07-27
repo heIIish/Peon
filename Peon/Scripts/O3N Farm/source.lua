@@ -30,7 +30,9 @@ while true do
 		goto continue
 	end
 
-	Util.Repair(99)
+	if not GetCharacterCondition(Condition.InCombat) then
+		Util.Repair(99)
+	end
 
 	if DoesObjectExist(bossName) and GetObjectHP(bossName) > 0 then
 		while not Util.Target(bossName) do
@@ -38,7 +40,10 @@ while true do
 		end
 
 		local backVector = -Util.GetTargetForwardVector()
-		Util.MoveTo(Util.GetTargetPosition() + backVector * 0.8)
+		local targetPosition = Util.GetTargetPosition()
+		if not targetPosition then goto continue end
+
+		Util.MoveTo(targetPosition + backVector * 0.8)
 		yield("/rotation manual")
 
 		if Util.Target(bossName) and GetDistanceToTarget() > 3 + GetTargetHitboxRadius() then
