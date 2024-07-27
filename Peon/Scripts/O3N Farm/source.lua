@@ -2,6 +2,7 @@ local Job = require "Enums\\Job"
 local Condition = require "Enums\\Condition"
 local ObjectKind = require "Enums\\ObjectKind"
 local Util = require "Libs\\Util"
+local UI = require "Libs\\UI"
 
 local bossName = "Halicarnassus"
 
@@ -16,11 +17,20 @@ local function useGapcloser()
 end
 
 while true do
-	if not GetCharacterCondition(Condition.BoundByDuty)
-		or GetCharacterCondition(Condition.BetweenAreas)
+	if GetCharacterCondition(Condition.BetweenAreas)
 		or GetCharacterCondition(Condition.OccupiedInQuestEvent)
 		or GetCharacterCondition(Condition.OccupiedInCutSceneEvent) then
 		wait(1)
+		goto continue
+	end
+
+	if not GetCharacterCondition(Condition.BoundByDuty) then
+		if not IsAddonVisible("ContentsFinder") then
+			yield("/send U")
+			wait(1)
+		else
+			wait(0.1)
+		end
 		goto continue
 	end
 
