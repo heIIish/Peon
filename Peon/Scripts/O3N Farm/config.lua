@@ -1,0 +1,3 @@
+return {
+	CollectChests = true
+}

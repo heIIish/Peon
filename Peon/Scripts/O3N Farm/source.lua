@@ -44,25 +44,27 @@ while true do
 	else
 		yield("/rotation cancel")
 		PathStop()
-		local chestPosition = Vector3(1, 0, -7)
-		Util.MoveTo(chestPosition)
-		wait(1)
-		local chestsOpened = 0
-		local nearbyChests = GetNearbyObjectNames(1000, ObjectKind.Treasure)
-		local chestCount = nearbyChests.Count
-		while chestCount > 0 and chestsOpened < chestCount * 2 do
-			for i = 1, chestCount do
-				local chestName = nearbyChests[i - 1]
-				if GetDistanceToPoint(chestPosition:Unpack()) < 1 then
-					while not Util.Target(chestName, i) do
+		if Configuration.CollectChests then
+			local chestPosition = Vector3(1, 0, -7)
+			Util.MoveTo(chestPosition)
+			wait(1)
+			local chestsOpened = 0
+			local nearbyChests = GetNearbyObjectNames(1000, ObjectKind.Treasure)
+			local chestCount = nearbyChests.Count
+			while chestCount > 0 and chestsOpened < chestCount * 2 do
+				for i = 1, chestCount do
+					local chestName = nearbyChests[i - 1]
+					if GetDistanceToPoint(chestPosition:Unpack()) < 1 then
+						while not Util.Target(chestName, i) do
+							wait(0.1)
+						end
+						Util.Interact()
+						chestsOpened = chestsOpened + 1
+						wait(0.2)
+						ClearTarget()
+					else
 						wait(0.1)
 					end
-					Util.Interact()
-					chestsOpened = chestsOpened + 1
-					wait(0.2)
-					ClearTarget()
-				else
-					wait(0.1)
 				end
 			end
 		end
