@@ -25,12 +25,9 @@ while true do
 	end
 
 	if not GetCharacterCondition(Condition.BoundByDuty) then
-		if not IsAddonVisible("ContentsFinder") then
-			yield("/send U")
-			wait(1)
-		else
-			wait(0.1)
-		end
+		yield("/send U")
+		echo("Toggled df")
+		wait(1)
 		goto continue
 	end
 
@@ -47,7 +44,7 @@ while true do
 
 		if Util.Target(bossName) and GetDistanceToTarget() > 3 + GetTargetHitboxRadius() then
 			useGapcloser()
-			wait(0.1)
+			wait(0.05)
 		else
 			wait(0.02)
 		end
