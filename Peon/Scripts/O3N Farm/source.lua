@@ -2,7 +2,6 @@ local Job = require "Enums\\Job"
 local Condition = require "Enums\\Condition"
 local ObjectKind = require "Enums\\ObjectKind"
 local Util = require "Libs\\Util"
-local UI = require "Libs\\UI"
 
 local bossName = "Halicarnassus"
 
@@ -26,7 +25,7 @@ while true do
 
 	if not GetCharacterCondition(Condition.BoundByDuty) then
 		yield("/send U")
-		echo("Toggled df")
+		echoDebug("Toggled contents finder.")
 		wait(1)
 		goto continue
 	end
