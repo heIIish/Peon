@@ -1,3 +1,4 @@
 return {
-	CollectChests = true
+	CollectChests = true,
+	AutoRepair = false
 }

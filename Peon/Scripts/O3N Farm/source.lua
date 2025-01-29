@@ -26,11 +26,11 @@ while true do
 	if not GetCharacterCondition(Condition.BoundByDuty) then
 		yield("/send U")
 		echoDebug("Toggled contents finder.")
-		wait(1)
+		wait(2)
 		goto continue
 	end
 
-	if not GetCharacterCondition(Condition.InCombat) then
+	if Configuration.AutoRepair and not GetCharacterCondition(Condition.InCombat) then
 		Util.Repair(99)
 	end
 
@@ -48,10 +48,8 @@ while true do
 
 		if Util.Target(bossName) and GetDistanceToTarget() > 3 + GetTargetHitboxRadius() then
 			useGapcloser()
-			wait(0.05)
-		else
-			wait(0.02)
 		end
+		wait(0.05)
 	else
 		yield("/rotation cancel")
 		PathStop()

@@ -22,6 +22,11 @@ function Vector3:Unpack()
 	return self.X, self.Y, self.Z
 end
 
+function Vector3:Magnitude()
+	local X, Y, Z = self.X, self.Y, self.Z
+	return math.sqrt(X * X + Y * Y + Z * Z)
+end
+
 function Vector3:Unit()
 	return 
 end

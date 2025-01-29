@@ -4,6 +4,10 @@ local Condition = require "Enums\\Condition"
 local Math = require "Libs\\Math"
 local UI = require "Libs\\UI"
 
+function Util.GetObjects()
+	
+end
+
 function Util.Target(name, index)
 	ArgCheck({name, "string"})
 	if index then
@@ -49,9 +53,30 @@ function Util.GetObjectPosition(name)
 	return DoesObjectExist(name) and Vector3(GetObjectRawXPos(name), GetObjectRawYPos(name), GetObjectRawZPos(name)) or nil
 end
 
-function Util.CopyTargetCoordinates()
-	local x, y, z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
-	SetClipboard(string.format("%s, %s, %s", tostring(x), tostring(y), tostring(z)))
+function Util.GetNearbyObjectNames(radius, objectKind)
+	local objectList = GetNearbyObjectNames(radius * radius, objectKind)
+	local count = objectList.Count
+
+	local objects = {}
+	for i = 0, count - 1 do
+		table.insert(objects, objectList[i])
+	end
+
+	return objects
+end
+
+function Util.GetObjectNamesNearPosition(position, radius, objectKind)
+	ArgCheck({position, "Vector3"})
+	assert(GetObjectNamesNearXYZ, "GetObjectNamesNearXYZ not implemented.")
+	local objectList = GetObjectNamesNearXYZ(position.X, position.Y, position.Z, radius * radius, objectKind)
+	local count = objectList.Count
+
+	local objects = {}
+	for i = 0, count - 1 do
+		table.insert(objects, objectList[i])
+	end
+
+	return objects
 end
 
 function Util.IsInteracting()
